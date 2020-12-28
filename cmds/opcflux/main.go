@@ -11,7 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb-client-go"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb/client/v2"
 	"github.com/konimarti/opc"
 	govaluate "gopkg.in/Knetic/govaluate.v3"
 	yaml "gopkg.in/yaml.v2"
@@ -83,7 +84,7 @@ func main() {
 
 	//setup influxdb client
 	//TODO: get username and password for influx from environment variables
-	c, err := client.NewHTTPClient(client.HTTPConfig{
+	c, err := influxdb2.NewClient(client.HTTPConfig{
 		Addr: conf.Influx.Addr,
 		//Username: conf.Influx.Username,
 		//Password: conf.Influx.Password,
@@ -145,9 +146,9 @@ func getConfig(config string) *Conf {
 }
 
 // writeState collects data and writes it to the influx database
-func writeState(timeC chan time.Time, c client.Client, conn opc.Connection, conf *Conf, exprMap map[string]*govaluate.EvaluableExpression) {
+func writeState(timeC chan time.Time, c influxdb2.Client, conn opc.Connection, conf *Conf, exprMap map[string]*govaluate.EvaluableExpression) {
 
-	batchconfig := client.BatchPointsConfig{
+	batchconfig := influxdb2.BatchPointsConfig{
 		Database:  conf.Influx.Database,
 		Precision: conf.Influx.Precision, // "s"
 	}
@@ -158,7 +159,7 @@ func writeState(timeC chan time.Time, c client.Client, conn opc.Connection, conf
 		data := adapter(conn.Read())
 
 		// create a new point batch
-		bp, err := client.NewBatchPoints(batchconfig)
+		bp, err := influxdb2.NewBatchPoints(batchconfig)
 		if err != nil {
 			fmt.Println(err)
 			return
